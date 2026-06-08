@@ -1,0 +1,5 @@
+vapt_env/
+.env
+cve_db/
+scan.xml
+report/

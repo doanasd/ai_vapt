@@ -1,0 +1,28 @@
+{
+  "rules": [
+    {
+      "id": "RULE-001",
+      "name": "vsftpd_234_backdoor",
+      "match": {"service": "vsftpd", "version": "2.3.4"},
+      "verify_method": "tcp_port_6200",
+      "severity": "Critical",
+      "report_tag": "Confirmed_RCE"
+    },
+    {
+      "id": "RULE-002",
+      "name": "smb_eternalblue",
+      "match": {"service": "microsoft-ds", "version": ""},
+      "verify_method": "nmap_smb_script",
+      "severity": "Critical",
+      "report_tag": "Confirmed_RCE"
+    },
+    {
+      "id": "RULE-003",
+      "name": "shellshock",
+      "match": {"service": "http", "version": ""},
+      "verify_method": "http_header_inject",
+      "severity": "Critical",
+      "report_tag": "Confirmed_RCE"
+    }
+  ]
+}
