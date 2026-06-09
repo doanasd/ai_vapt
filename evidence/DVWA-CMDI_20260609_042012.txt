@@ -1,0 +1,9 @@
+Command Injection — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : 127.0.0.1; id
+      - Kỹ thuật / Mục đích: semicolon injection
+      - Output trích xuất  : round-trip min/avg/max/stddev = 0.032/0.045/0.056/0.000 ms
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+      - AI Reasoning       : Cần thêm bằng chứng để xác nhận lỗ hổng thực sự tồn tại và không phải là honeypot
+      - Honeypot check     : Không có dấu hiệu của honeypot, vì các lệnh thực thi đều trả về kết quả hợp lệ và không có phản hồi giả mạo.
+      - Final verdict      : CONFIRMED (95%)
+      - Final reasoning    : Dựa trên các kết quả, có thể thấy rằng lỗ hổng thực sự tồn tại. Ví dụ, payload '127.0.0.1; id' trả về 'uid=33(www-data) gid=33(www-data) groups=33(www-data)', và payload '127.0.0.1; whoami' trả về 'www-data'. Điều này cho thấy rằng hệ thống đang trả về thông tin nhạy cảm về người dùng và nhóm. Ngoài ra, các lệnh như 'ls -l' và 'ps aux | grep www-data' cũng trả về kết quả hợp lệ, chứng tỏ rằng lỗ hổng cho phép thực thi lệnh hệ thống.

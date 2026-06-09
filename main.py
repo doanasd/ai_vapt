@@ -85,7 +85,7 @@ def rule_based_validate(plugin_id, verify_result):
             "validated": True,
             "reason": f"Confirm markers khớp: {matched}",
             "rule_applied": rules["description"]
-        }
+            }
 
     return {
         "validated": False,
@@ -170,7 +170,7 @@ def main():
     print(f"  Thời gian: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*60)
 
-    	# BƯỚC 1: NETWORK RECONNAISSANCE ───────────────────────
+    # BƯỚC 1: NETWORK RECONNAISSANCE ───────────────────────
     print("\n[TẦNG 1] NETWORK RECONNAISSANCE (Nmap -sV)")
     print(f"  Mục tiêu: phát hiện port mở, service, version")
     print(f"  Lệnh   : nmap -p 21,80,8080 -sV {target_ip}\n")
@@ -178,7 +178,7 @@ def main():
     for line in raw.stdout.split('\n'):
         print(f"  {line}")
 
-    	# BƯỚC 2: CONTEXT OPTIMIZATION ─────────────────────────
+    # BƯỚC 2: CONTEXT OPTIMIZATION ─────────────────────────
     print("\n[TẦNG 2] CONTEXT OPTIMIZATION (Parser Agent)")
     print(f"  Mục tiêu: cắt tỉa log rác, chỉ giữ port OPEN")
     print(f"  Lý do  : giảm token nạp vào LLM, tránh context overflow\n")
@@ -186,7 +186,7 @@ def main():
     print(f"  [PARSED OUTPUT]:")
     print("  " + json.dumps(scan_results, indent=4).replace('\n', '\n  '))
 
-    	# BƯỚC 3: AI ANALYSIS + RAG ────────────────────────────
+    # BƯỚC 3: AI ANALYSIS + RAG ────────────────────────────
     print("\n[TẦNG 3] AI ANALYSIS + RAG LOOKUP")
     print(f"  Mục tiêu: AI tra cứu CVE database, tìm kịch bản tấn công phù hợp")
     plugins = plugin_loader.load_all_plugins()
@@ -238,7 +238,7 @@ def main():
             meta = plugin.METADATA
             print(f"\n  ┌─ Plugin: {meta['name']} [{meta['id']}] CVSS={meta.get('cvss_score','N/A')}")
 
-	# BƯỚC 4: AI SELF-VALIDATION
+            # BƯỚC 4: AI SELF-VALIDATION
             print(f"  │")
             print(f"  ├─[BƯỚC 4] AI SELF-VALIDATION")
             print(f"  │  Mục tiêu: AI tự nghi ngờ, sinh payload, thử khai thác thực tế")
@@ -246,7 +246,7 @@ def main():
             print(f"  │  vulnerable với {meta['name']} — thử payload từ knowledge base...'")
             verify_result = plugin.verify(target_ip, port_info['port'], context=shared_context)
 
-	# BƯỚC 5: RULE-BASED VALIDATION
+            # BƯỚC 5: RULE-BASED VALIDATION
             print(f"  │")
             print(f"  ├─[BƯỚC 5] RULE-BASED VALIDATION")
             validation = rule_based_validate(meta['id'], verify_result)
@@ -255,12 +255,19 @@ def main():
             print(f"  │  Lý do        : {validation['reason']}")
             print(f"  │  Status       : {verify_result['status']}")
 
-            # Override status nếu rule fail
-            if not validation['validated'] and verify_result['status'] == 'CONFIRMED':
-                verify_result['status'] = 'PENDING'
-                print(f"  │  → Rule override: CONFIRMED → PENDING (chưa đủ evidence)")
+            # Tối ưu hóa sự tương tác giữa AI và Rule
+            if verify_result['status'] == 'CONFIRMED':
+                if validation['validated']:
+                    print(f"  │  → Rule Sync: AI và Rule đều xác nhận (Độ tin cậy tuyệt đối)")
+                else:
+                    print(f"  │  → Rule Warning: AI xác nhận nhưng Rule tĩnh không khớp. Giữ nguyên kết quả của AI.")
+            elif not validation['validated'] and verify_result['status'] == 'PENDING':
+                print(f"  │  → Rule Sync: Chưa đủ bằng chứng để xác nhận.")
+            elif validation['validated'] and verify_result['status'] != 'CONFIRMED':
+                verify_result['status'] = 'CONFIRMED'
+                print(f"  │  → Rule Override: AI bỏ sót, nhưng Rule tĩnh phát hiện marker rõ ràng. Cập nhật thành CONFIRMED.")
 
-	# BƯỚC 6: EVIDENCE
+            # BƯỚC 6: EVIDENCE
             print(f"  │")
             print(f"  ├─[BƯỚC 6] EVIDENCE")
             print(f"  │  {verify_result['evidence'].replace(chr(10), chr(10)+'  │  ')}")
@@ -273,7 +280,7 @@ def main():
                     f.write(verify_result['evidence'])
                 print(f"  │  [FILE] Ghi ra: {fname}")
 
-	# BƯỚC 7: AI REPORT
+            # BƯỚC 7: AI REPORT
             ai_report = None
             if verify_result['status'] == 'CONFIRMED':
                 print(f"  │")
@@ -283,7 +290,7 @@ def main():
                 print(f"  │  Impact        : {ai_report.get('impact')}")
                 print(f"  │  Remediation   : {ai_report.get('remediation')}")
 
-	# BƯỚC 8: REPORT OUTPUT
+            # BƯỚC 8: REPORT OUTPUT
             report = generate_report(target_ip, port_info['port'], plugin, verify_result, validation, ai_report, rag_matches)
             all_reports.append(report)
 

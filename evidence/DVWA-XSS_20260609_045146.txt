@@ -1,0 +1,4 @@
+XSS Reflected — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : <script>alert('XSS')</script>
+      - Phản hồi thực tế   : [UNESCAPED_HIT] Context: ...it"> 			</p>  		</form> 		<pre>Hello <script>alert('XSS')</script></pre> 	</div>  	<h2>More Information...
+      - AI Reasoning       : Dựa trên các kết quả, lỗ hổng XSS được xác nhận thông qua các kỹ thuật khác nhau như Basic Script Tag, Image Error Event, và các kỹ thuật khác. Các output đều chứa bằng chứng nhạy cảm, không chỉ là mồi nhử. Ví dụ, payload '<script>alert('XSS')</script>' cho kết quả '[UNESCAPED_HIT] Context: ...it"> 			</p>  		</form> 		<pre>Hello <script>alert('XSS')</script></pre> 	</div>  	<h2>More Information...' chứng tỏ lỗ hổng XSS tồn tại.

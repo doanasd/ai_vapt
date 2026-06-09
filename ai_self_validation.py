@@ -59,25 +59,30 @@ Trả về JSON hợp lệ:
 
 def groq_evaluate_results(plugin_id, all_results, honeypot_suspicion):
     """AI đánh giá toàn bộ kết quả và đưa ra verdict cuối"""
-    prompt = f"""Bạn là AI security analyst đưa ra verdict cuối.
+    prompt = f"""Bạn là một chuyên gia Security Analyst (Pentester) thực tế và cực kỳ khắt khe.
 
-Plugin: {plugin_id}
-Honeypot suspicion: {honeypot_suspicion}
-Tất cả kết quả payload:
+Plugin đang kiểm tra: {plugin_id}
+Honeypot suspicion từ phase trước: {honeypot_suspicion}
+Tất cả kết quả payload thực thi:
 {json.dumps(all_results, ensure_ascii=False, indent=2)}
 
-Đánh giá:
-1. Các kết quả có nhất quán không? Hay có dấu hiệu bị dàn dựng?
-2. Confidence level cuối cùng là bao nhiêu?
-3. Verdict: CONFIRMED / FALSE_POSITIVE / PENDING / HONEYPOT_SUSPECTED
+QUY TẮC ĐÁNH GIÁ (TUYỆT ĐỐI TUÂN THỦ):
+1. KHÔNG ĐƯỢC ẢO GIÁC (NO HALLUCINATION). Bạn chỉ được phép kết luận là thành công nếu output THỰC SỰ chứa dữ liệu của hệ thống (ví dụ: uid, www-data, nội dung /etc/passwd, v.v.).
+2. Cảnh báo ping: Nếu output CHỈ hiển thị kết quả của lệnh ping (ví dụ: 'PING 127.0.0.1... 64 bytes from...') mà không có thông tin hệ thống nào khác, bạn PHẢI đánh giá payload đó là THẤT BẠI.
+3. Cảnh báo Blind/Timeout: Nếu output chứa dòng chữ '[SYSTEM_TIMEOUT]', và payload tương ứng có chứa các lệnh gây delay (như 'sleep 5'), đó là BẰNG CHỨNG MẠNH MẼ cho thấy lỗ hổng thực sự tồn tại (Blind Injection).
+4. Phân tích Honeypot: Nếu các lỗi cấu hình ngớ ngẩn (cat /etc/nonexist) mà vẫn trả về 200 OK hoặc ra output giả mạo, hãy đánh giá HONEYPOT_SUSPECTED.
+
+Nhiệm vụ:
+1. Đánh giá tính nhất quán của các kết quả.
+2. Đưa ra Verdict cuối cùng: CONFIRMED / FALSE_POSITIVE / PENDING / HONEYPOT_SUSPECTED
 
 Trả về JSON:
 {{
   "verdict": "CONFIRMED|FALSE_POSITIVE|PENDING|HONEYPOT_SUSPECTED",
   "confidence_final": 0-100,
-  "consistency_check": "nhận xét về tính nhất quán của các kết quả",
-  "honeypot_conclusion": "kết luận về khả năng honeypot",
-  "final_reasoning": "lý do tổng hợp"
+  "consistency_check": "Phân tích output có thực sự chứa bằng chứng nhạy cảm hay chỉ là mồi nhử (ping)?",
+  "honeypot_conclusion": "Kết luận về honeypot",
+  "final_reasoning": "Lý do chi tiết dựa trên bằng chứng (trích dẫn text cụ thể từ output)"
 }}"""
 
     response = client.chat.completions.create(

@@ -1,0 +1,5 @@
+File Upload RCE — AI Self-Validation hoàn tất.
+      - Webshell File      : shell.php
+      - Payload tốt nhất   : id
+      - Output trích xuất  : uid=33(www-data) gid=33(www-data) groups=33(www-data)
+      - AI Reasoning       : Dựa trên các kết quả, đặc biệt là lệnh 'id' và 'cat /etc/passwd' cho thấy output chứa thông tin hệ thống thực sự. Ngoài ra, lệnh 'sleep 5 && id' cũng cho thấy hệ thống thực thi lệnh delay thành công mà không có dấu hiệu của honeypot. Điều này cho thấy lỗ hổng thực sự tồn tại và không phải là giả mạo.
