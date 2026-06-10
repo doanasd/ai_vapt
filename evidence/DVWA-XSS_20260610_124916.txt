@@ -1,0 +1,4 @@
+XSS Reflected — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : <script>alert('XSS')</script>
+      - Phản hồi thực tế   : [UNESCAPED_HIT] Context: ...it">  			</p>   		</form>  		<pre>Hello <script>alert('XSS')</script></pre>  	</div>    	<h2>More Information...
+      - AI Reasoning       : Các payload như <script>alert('XSS')</script>, <img src=x onerror=alert(1)>, và các payload khác đều cho thấy lỗ hổng XSS tồn tại. Đặc biệt, payload <script>document.write('XSS-CONFIRM')</script> và <iframe src=javascript:alert('XSS')> cũng cho thấy lỗ hổng này. Không có dấu hiệu của honeypot vì các payload phát hiện honeypot như <script>fetch('/non-existent-file.txt')</script> và <script>console.log(process.env)</script> cũng trả về kết quả như mong đợi mà không có thông tin hệ thống nhạy cảm.

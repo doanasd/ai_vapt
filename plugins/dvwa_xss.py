@@ -25,7 +25,8 @@ class DVWAXSSPlugin(BasePlugin):
     def match(self, service_info: Dict[str, Any]) -> bool:
         return service_info.get("service", "") in ["http", "https"]
 
-    def _send_payload(self, base_url, payload, cookie):
+    def _send_payload(self, base_url, target_ip, target_port, payload, cookie):
+        """Gửi XSS Payload và phân tích vi sai sự xuất hiện của cấu trúc unescaped"""
         try:
             encoded_payload = urllib.parse.quote(payload)
             full_url = f"{base_url}?name={encoded_payload}"
@@ -49,7 +50,7 @@ class DVWAXSSPlugin(BasePlugin):
             marker_hit = "[UNESCAPED_HIT]" in output
 
             self.logger.log_transaction(
-                plugin_id=self.METADATA["id"], target_ip="13.229.112.6", target_port=80,
+                plugin_id=self.METADATA["id"], target_ip=target_ip, target_port=target_port,
                 url=full_url, method="GET", payload=payload, req_headers={"Cookie": cookie},
                 res_status=resp.status, res_headers={}, res_body=output, latency=elapsed, marker_hit=marker_hit
             )
@@ -60,7 +61,7 @@ class DVWAXSSPlugin(BasePlugin):
     def verify(self, target_ip: str, target_port: int, context: Dict[str, Any]) -> Dict[str, Any]:
         cookie = context.get("session_cookie", "")
         if not cookie:
-            return {"status": "PENDING", "evidence": "Chưa có session cookie"}
+            return {"status": "PENDING", "evidence": "Shared_context thiếu session_cookie."}
 
         url = f"http://{target_ip}:{target_port}/vulnerabilities/xss_r/"
         kb_payloads = ["<script>alert('XSS')</script>", "<img src=x onerror=alert(1)>"]
@@ -68,13 +69,13 @@ class DVWAXSSPlugin(BasePlugin):
 
         print(f"      [XSS-Autonomous] Vòng 1: Kiểm thử XSS Reflected...")
         for payload in kb_payloads:
-            res = self._send_payload(url, payload, cookie)
+            res = self._send_payload(url, target_ip, target_port, payload, cookie)
             if res["hit"]:
                 initial_confirmed = {"payload": payload, "output": res["output"]}
                 break
 
         if not initial_confirmed:
-            return {"status": "FALSE_POSITIVE", "evidence": "Mục tiêu lọc thực thể XSS an toàn."}
+            return {"status": "FALSE_POSITIVE", "evidence": "Mục tiêu lọc thực thể XSS an toàn hoặc áp dụng mã hóa đầu ra."}
 
         telemetry_summary = self.logger.get_plugin_telemetry(self.METADATA["id"])
         decision = self.engine.calculate_score(

