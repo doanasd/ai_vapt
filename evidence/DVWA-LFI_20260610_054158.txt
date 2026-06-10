@@ -1,0 +1,8 @@
+Local File Inclusion — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : /etc/passwd
+      - Mục đích           : Absolute Path LFI
+      - Output trích xuất  : root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nolo
+      - AI Reasoning       : Dựa trên các kết quả, đặc biệt là payload '/etc/passwd' và '/etc/hosts' trả về dữ liệu hệ thống thực sự, cho thấy lỗ hổng Local File Inclusion (LFI) tồn tại. Ngoài ra, payload '/non-existent-file' không trả về thông tin hệ thống nhưng vẫn có output giả mạo, tuy nhiên không đủ để kết luận là honeypot vì các payload khác đã chứng minh được lỗ hổng.

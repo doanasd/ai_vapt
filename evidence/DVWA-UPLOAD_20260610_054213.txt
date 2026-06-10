@@ -1,0 +1,5 @@
+File Upload RCE — AI Self-Validation hoàn tất.
+      - Webshell File      : shell.php
+      - Payload tốt nhất   : id
+      - Output trích xuất  : uid=33(www-data) gid=33(www-data) groups=33(www-data)
+      - AI Reasoning       : Từ các kết quả payload thực thi, có thể thấy output chứa thông tin hệ thống thực sự như 'uid=33(www-data) gid=33(www-data) groups=33(www-data)' và 'root:x:0:0:root:/root:/bin/bash', điều này cho thấy lỗ hổng thực sự tồn tại. Ngoài ra, payload 'sleep 5 && echo 'OK'' trả về '[SYSTEM_TIMEOUT: Lệnh (như sleep) đã thực thi qua Webshell thành công!]', đây là bằng chứng mạnh mẽ cho thấy lỗ hổng Blind Injection tồn tại.

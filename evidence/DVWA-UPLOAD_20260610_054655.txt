@@ -1,0 +1,5 @@
+File Upload RCE — AI Self-Validation hoàn tất.
+      - Webshell File      : shell.php
+      - Payload tốt nhất   : id
+      - Output trích xuất  : uid=33(www-data) gid=33(www-data) groups=33(www-data)
+      - AI Reasoning       : Dựa trên các kết quả payload thực thi, đặc biệt là output của lệnh 'id', 'whoami', 'ls -l', 'cat /etc/passwd' cho thấy hệ thống thực sự trả về thông tin nhạy cảm. Ngoài ra, payload 'sleep 5 && id' cũng cho thấy hệ thống thực sự thực thi lệnh và trả về thông tin hệ thống sau thời gian delay, là bằng chứng mạnh mẽ cho thấy lỗ hổng thực sự tồn tại.

@@ -2,7 +2,6 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import socket
-import re
 import time
 from typing import Dict, Any
 from plugins.base_plugin import BasePlugin
@@ -36,14 +35,16 @@ class DVWAXSSPlugin(BasePlugin):
             elapsed = round(time.time() - t0, 3)
             body = resp.read().decode('utf-8')
             
-            # [LỌC HTML THÔNG MINH - TRÍCH XUẤT CONTEXT]
-            # Tìm chính xác vị trí payload xuất hiện trong HTML (kèm 40 ký tự trước/sau để AI đánh giá)
+            # GIẢI PHÁP ĐÚNG: Giữ nguyên HTML để tìm payload gốc
             output = ""
             if payload in body:
+                # Nếu tìm thấy, lấy 40 ký tự xung quanh
                 idx = body.find(payload)
                 start = max(0, idx - 40)
                 end = min(len(body), idx + len(payload) + 40)
-                context_str = body[start:end].replace('\n', ' ')
+                
+                # Chỉ thay thế ký tự xuống dòng thành khoảng trắng để log không bị gãy
+                context_str = body[start:end].replace('\n', ' ').replace('\r', ' ')
                 output = f"[UNESCAPED_HIT] Context: ...{context_str}..."
             elif payload.replace("<", "&lt;") in body:
                 output = "[ESCAPED] Payload đã bị WAF/Mã hóa HTML (Safe)."
