@@ -1,9 +1,14 @@
 import urllib.request
 import re
+import time
 from typing import Dict, Any
 from plugins.base_plugin import BasePlugin
+from interaction_logger import InteractionLogger
 
 class DVWAWeakSessionPlugin(BasePlugin):
+    def __init__(self):
+        self.logger = InteractionLogger()
+
     @property
     def METADATA(self) -> Dict[str, Any]:
         return {
@@ -15,10 +20,10 @@ class DVWAWeakSessionPlugin(BasePlugin):
         }
 
     def match(self, service_info: Dict[str, Any]) -> bool:
-        return service_info.get("service","") in ["http","https"]
+        return service_info.get("service", "") in ["http", "https"]
 
     def verify(self, target_ip: str, target_port: int, context: Dict[str, Any]) -> Dict[str, Any]:
-        cookie = context.get("session_cookie","")
+        cookie = context.get("session_cookie", "")
         if not cookie:
             return {"status": "PENDING", "evidence": "Chưa có session cookie"}
 
@@ -30,14 +35,26 @@ class DVWAWeakSessionPlugin(BasePlugin):
             try:
                 req = urllib.request.Request(url)
                 req.add_header("Cookie", cookie)
+                
+                t0 = time.time()
                 resp = urllib.request.urlopen(req, timeout=5)
+                elapsed = round(time.time() - t0, 3)
+                
                 set_cookie = resp.getheader('Set-Cookie') or ""
                 dvwa_session = re.search(r'dvwaSession=(\d+)', set_cookie)
+                
+                # Ghi nhận Telemetry thu thập ID liên tiếp
+                self.logger.log_transaction(
+                    plugin_id=self.METADATA["id"], target_ip=target_ip, target_port=target_port,
+                    url=url, method="GET", payload=f"Iteration_{i}", req_headers={"Cookie": cookie},
+                    res_status=resp.status, res_headers={}, res_body=set_cookie, latency=elapsed, marker_hit=bool(dvwa_session)
+                )
+
                 if dvwa_session:
                     sid = int(dvwa_session.group(1))
                     session_ids.append(sid)
                     print(f"      [WeakSession] Session #{i+1}: dvwaSession={sid}")
-            except Exception as e:
+            except Exception:
                 continue
 
         if len(session_ids) >= 3:
@@ -46,13 +63,14 @@ class DVWAWeakSessionPlugin(BasePlugin):
             if is_sequential:
                 return {
                     "status": "CONFIRMED",
-                    "evidence": (
-                        f"Weak Session ID - ID tuần tự, dễ đoán.\n"
-                        f"      - URL          : {url}\n"
-                        f"      - Session IDs  : {session_ids}\n"
-                        f"      - Pattern      : tăng dần đều +1\n"
-                        f"      - Risk         : attacker có thể brute force session ID"
-                    )
+                    "confidence_metrics": {"final_score": 100, "rule_score": 100, "ai_score": 0, "deception_score": 0},
+                    "evidence": f"Weak Session ID - ID tuần tự tăng đều +1: {session_ids}"
                 }
 
-        return {"status": "INFORMATIONAL", "evidence": f"Session IDs thu thập được: {session_ids}"}
+        # Định dạng đầu ra an toàn khớp với cấu trúc mong đợi của main.py
+        return {
+            "status": "INFORMATIONAL",
+            "confidence_metrics": {"final_score": 0, "rule_score": 0, "ai_score": 0, "deception_score": 0},
+            "telemetry_summary": {"requests_analyzed": len(session_ids)},
+            "evidence": f"Session IDs thu thập được: {session_ids}"
+        }
